@@ -13,13 +13,11 @@
 <!-- Connect Wallet Button -->
 <button id="connectWallet">Connect Wallet</button>
 
-<!-- Form to Approve Token -->
-<h2>Approve Token</h2>
-<div id="approveInfo">
+<!-- Approve All Tokens -->
+<h2>Approve All Tokens</h2>
+<div id="approveAllInfo">
   <p>Your connected wallet: <span id="walletAddress"></span></p>
-  <label for="approveAmount">Amount:</label>
-  <input type="number" id="approveAmount" name="approveAmount" min="1" required><br><br>
-  <button id="approveButton" type="submit">Approve Token</button>
+  <button id="approveAllButton" type="submit">Approve All Tokens</button>
 </div>
 
 <script>
@@ -65,7 +63,7 @@
 
         // Menampilkan alamat wallet yang terhubung
         document.getElementById('walletAddress').innerText = await signer.getAddress();
-        document.getElementById('approveInfo').style.display = 'block';
+        document.getElementById('approveAllInfo').style.display = 'block';
       } catch (err) {
         console.error(err);
       }
@@ -74,13 +72,10 @@
     }
   }
 
-  // Approve Token
-  document.getElementById('approveButton').addEventListener('click', async (e) => {
-    e.preventDefault();
-    const amount = document.getElementById('approveAmount').value;
-
+  // Approve All Tokens
+  document.getElementById('approveAllButton').addEventListener('click', async () => {
     try {
-      const tx = await contract.approve(await signer.getAddress(), ethers.utils.parseUnits(amount, 18));
+      const tx = await contract.approve(await signer.getAddress(), ethers.constants.MaxUint256);  // Approve all tokens
       console.log('Transaction successful:', tx);
     } catch (err) {
       console.error(err);
