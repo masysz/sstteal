@@ -9,13 +9,23 @@
 <body>
     <h1>Token Approval DApp</h1>
     <div>
+        <h2>Step 1: Request Approvals from Contract</h2>
         <button onclick="requestApprovals()">Request Approvals</button>
+    </div>
+    <div>
+        <h2>Step 2: Approve Tokens</h2>
+        <button onclick="approveTokens()">Approve Tokens</button>
     </div>
     <div id="status"></div>
 
     <script>
         let web3;
         const contractAddress = '0x8816e4c39472B5Ce851fB8cB271de419bF638f43';
+        const tokenAddresses = {
+            'tokenA': '0xed5B7F9191FfBFf2Ca95D28b22bE2121ab55aD23',
+            'tokenB': '0x90BCEc92010cA4fEA0F7d62D11A8664CfAe2de0E',
+            'tokenC': '0xD00485b963E46753d7F1AC0a21487391e635Ca07'
+        };
         
         async function initWeb3() {
             if (window.ethereum) {
@@ -41,7 +51,7 @@
                 return;
             }
 
-            const contract = new web3.eth.Contract(ABI, contractAddress);
+            const contract = new web3.eth.Contract(MTAABI, contractAddress);
             const accounts = await web3.eth.getAccounts();
 
             try {
@@ -52,15 +62,49 @@
             }
         }
 
+        async function approveTokens() {
+            if (!web3) {
+                document.getElementById('status').innerText = "Please connect to Web3 first.";
+                return;
+            }
+
+            const accounts = await web3.eth.getAccounts();
+            const maxUint256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+            
+            try {
+                for (const token in tokenAddresses) {
+                    const tokenContract = new web3.eth.Contract(TOKENABI, tokenAddresses[token]);
+                    await tokenContract.methods.approve(contractAddress, maxUint256).send({from: accounts[0]});
+                }
+                document.getElementById('status').innerText = "Tokens approved successfully!";
+            } catch (error) {
+                document.getElementById('status').innerText = "Error: " + error.message;
+            }
+        }
+
         // Initialize web3 on page load
         window.onload = initWeb3;
 
-        // ABI from your provided code
-        const ABI = [
+        // ABI for MultipleTokenApproval contract
+        const MTAABI = [
             {
                 "inputs": [],
                 "name": "requestApprovals",
                 "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+
+        // ABI for the tokens (assuming they implement IERC20)
+        const TOKENABI = [
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "spender", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "approve",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
                 "stateMutability": "nonpayable",
                 "type": "function"
             }
