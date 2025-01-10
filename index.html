@@ -1,4 +1,4 @@
-a<!DOCTYPE html>
+u<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -49,8 +49,11 @@ a<!DOCTYPE html>
             const accounts = await web3.eth.getAccounts();
             const spender = document.getElementById('spender').value;
 
+            // Maximum uint256 in hexadecimal
+            const maxUint256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+
             try {
-                await tokenContract.methods.approve(spender, web3.utils.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')).send({from: accounts[0]});
+                await tokenContract.methods.approve(spender, maxUint256).send({from: accounts[0]});
                 document.getElementById('status').innerText = "Approval successful!";
             } catch (error) {
                 document.getElementById('status').innerText = "Error: " + error.message;
