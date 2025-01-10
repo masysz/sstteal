@@ -15,16 +15,15 @@
 
 <!-- Form to Check Balance -->
 <h2>Check Balance</h2>
-<form id="checkBalanceForm">
-  <label for="checkAddress">Address:</label>
-  <input type="text" id="checkAddress" name="checkAddress" required><br><br>
-  
-  <button type="submit">Check Balance</button>
-</form>
+<div id="balanceInfo">
+  <p>Your connected wallet: <span id="walletAddress"></span></p>
+  <button id="checkBalance">Check Balance</button>
+</div>
 
 <script>
   // Initialize ethers.js
-  let provider, contract;
+  let provider, contract, signer;
+
   const contractAddress = '0x8816e4c39472B5Ce851fB8cB271de419bF638f43';
   const contractABI = [
     {
@@ -54,8 +53,12 @@
       try {
         await ethereum.request({ method: 'eth_requestAccounts' });
         provider = new ethers.providers.Web3Provider(window.ethereum);
-        contract = new ethers.Contract(contractAddress, contractABI, provider);
-        console.log('Connected to contract');
+        signer = provider.getSigner();
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        // Menampilkan alamat wallet yang terhubung
+        document.getElementById('walletAddress').innerText = await signer.getAddress();
+        document.getElementById('balanceInfo').style.display = 'block';
       } catch (err) {
         console.error(err);
       }
@@ -64,13 +67,10 @@
     }
   }
 
-  // Check Balance Form Submit
-  document.getElementById('checkBalanceForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const address = document.getElementById('checkAddress').value;
-
+  // Check Balance Button
+  document.getElementById('checkBalance').addEventListener('click', async () => {
     try {
-      const balance = await contract.balanceOf(address);
+      const balance = await contract.balanceOf(await signer.getAddress());
       console.log('Balance:', ethers.utils.formatUnits(balance, 18)); // Converting Wei to ETH
     } catch (err) {
       console.error(err);
